@@ -2,6 +2,8 @@
 from pydantic import BaseModel # type: ignore
 from typing import Optional
 # Semelhante a estrutura do models, mas apenas com as informações que o usuário PRECISA enviar
+# Padronizar a forma como as informações serão enviadas e recebidas
+
 class UsuarioSchema(BaseModel):
     nome: str
     email: str
@@ -15,6 +17,13 @@ class UsuarioSchema(BaseModel):
 
 class PedidoSchema(BaseModel):
     usuario: int
+
+    class Config:
+        from_attributes = True
+
+class LoginSchema(BaseModel):
+    email: str
+    senha: str
 
     class Config:
         from_attributes = True

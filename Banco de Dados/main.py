@@ -22,4 +22,4 @@ app.include_router(order_router)
 
 @app.get("/")
 async def inicio():
-    return {"mensagem": "Nada para ver aqui, vá para /docs !"}
+    return {"mensagem": "Nada para ver aqui, vá para /docs!"}
