@@ -43,6 +43,6 @@ async def cancelar_pedido(id_pedido: int, session: Session= Depends(pegar_sessao
     pedido.status = "CANCELADO"
     session.commit()
     return {
-        "mensagem": f"Pedido {id_pedido} cancelado com sucesso.",
+        "mensagem": f"Pedido {pedido.id} cancelado com sucesso.",
         "pedido": pedido
         }
