@@ -1,12 +1,5 @@
 from sqlalchemy import create_engine, Column, String, Integer, Boolean, Float, ForeignKey # type: ignore
-from sqlalchemy.orm import declarative_base # type: ignore
-
-#alembic, responsável pelo processo de migração (atualização do bd)
-#sempre que quiser fazer uma migração, usar o comando "alembic revision --autogenerate -m "Seu texto aqui"  para criar a nova versão
-#depois, para atualizar use o comando alembic upgrade head
-
-#sqlalchemy - biblioteca instalada
-# ORM - é possivel criar classes no python que são traduzidas para tabelas no banco de dados. Sendo possivel usar os dados do Banco simplesmente chamando essas classes construidas. Traduz comando em SQL para comando em python.
+from sqlalchemy.orm import declarative_base, relationship # type: ignore
 
 # cria a conexão (ending) do banco
 db = create_engine("sqlite:///banco.db")
@@ -41,12 +34,23 @@ class Pedido(Base):
     status = Column("status", String)
     usuario = Column("usuario", ForeignKey("usuarios.id"))
     preco = Column("preco", Float)
-    # itens = 
+    # conectando as duas tabelas
+    itens = relationship("ItemPedido", cascade="all, delete-orphan")
 
     def __init__ (self, usuario, status="PENDENTE", preco=0):
         self.usuario = usuario
         self.status = status
         self.preco = preco
+
+    def calcular_preco(self):
+        preco_pedido = 0
+        # percorrer todos os itens e somar o preço total
+        for item in self.itens:
+            preco_item = item.quantidade * item.preco_unitario
+            preco_pedido += preco_item
+        # editar o campo preço com o novo valor 
+        self.preco = preco_pedido
+ 
 
 # Itens Pedido
 class ItemPedido(Base):
@@ -67,3 +71,10 @@ class ItemPedido(Base):
         self.pedido = pedido
 
 # executar a criação dos metadados do banco
+
+#alembic, responsável pelo processo de migração (atualização do bd)
+# Fazer uma migração, usar o comando "alembic revision --autogenerate -m "Seu texto aqui"  para criar a nova versão
+#depois, para atualizar use o comando alembic upgrade head
+
+#sqlalchemy - biblioteca instalada
+# ORM - é possivel criar classes no python que são traduzidas para tabelas no banco de dados. Sendo possivel usar os dados do Banco simplesmente chamando essas classes construidas. Traduz comando em SQL para comando em python.
