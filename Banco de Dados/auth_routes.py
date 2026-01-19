@@ -45,6 +45,7 @@ async def criar_conta(usuario_s: UsuarioSchema, session: Session= Depends(pegar_
     # 1- abrir sessão no database (db) -> no arquivo dependencis.py
     # 2- Verificar se esse usuário já existe, pesquiso isso na tabela usuário
     usuario = session.query(Usuario).filter(Usuario.email==usuario_s.email).first() #Busca na tabela
+    # select * from Usuario where email = usuario_s.email
     if usuario: 
         # email já cadastrado antes
         raise HTTPException(status_code=400, detail="Já existe um cadastro com esse e-mail.") # irmão de erro do return    
@@ -52,6 +53,7 @@ async def criar_conta(usuario_s: UsuarioSchema, session: Session= Depends(pegar_
         # criar novo usuario 
         senha_cripto= bcrypt_context.hash(usuario_s.senha)
         novo_usuario = Usuario(usuario_s.nome, usuario_s.email, senha_cripto, usuario_s.ativo, usuario_s.admin)
+        # insert into Usuario (nome, email, senha, ativo, admin) values (...)
         session.add(novo_usuario)
         session.commit() # salva as informações 
         return {"mensagem": f"usuário {usuario_s.nome} cadastrado com sucesso"}
