@@ -88,7 +88,7 @@ async def adicionar_item_pedido(id_pedido: int,
         "preco_atualizado": pedido.preco
         }
 
-@order_router.post("/pedido/remover-item/{id_item_pedido}")
+@order_router.delete("/pedido/remover-item/{id_item_pedido}")
 async def remover_item_pedido(id_item_pedido: int,  
                                 session: Session= Depends(pegar_sessao), 
                                 usuario: Usuario= Depends(verificar_token)):
