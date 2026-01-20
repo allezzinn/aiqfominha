@@ -159,4 +159,3 @@ async def cancelar_pedido(id_pedido: int, session: Session= Depends(pegar_sessao
         "mensagem": f"Pedido {pedido.id} cancelado com sucesso.",
         "pedido": pedido
         }
-
