@@ -10,6 +10,7 @@ from fastapi.security import OAuth2PasswordRequestForm # type: ignore
 
 auth_router = APIRouter(prefix="/autenticacao", tags=["autenticacao"])
 
+# comentários nesse documento mostram a "tradução" do sqlalchemy para SQL puro
 
 def criar_token(id_usuario, duracao_token= timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
     """Função para criar token de autentificação"""
