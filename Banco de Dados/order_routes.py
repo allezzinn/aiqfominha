@@ -18,35 +18,7 @@ async def pedidos():
     #o formato json funciona essencialmente com dicinários
     return {"mensagem": "Você está na rota pedidos"}
 
-@order_router.post("/pedido")
-async def criar_pedido(pedido_s: PedidoSchema, session: Session= Depends(pegar_sessao)):
-    
-    novo_pedido = Pedido(pedido_s.usuario)
-    session.add(novo_pedido)
-    session.commit()
-    
-    return {"mensagem": f"pedido criado com sucesso. Id do pedido {novo_pedido.id}."}
-
-@order_router.put("/pedido/cancelar/{id_pedido}")
-async def cancelar_pedido(id_pedido: int, session: Session= Depends(pegar_sessao), usuario: Usuario= Depends(verificar_token)):
-    # Verificar se o pedido existe e se pertence ao usuário autenticado
-    # Usuário que podem cancelar pedidos: admin ou o próprio dono do pedido
-    # usuario.admin = True ou usuario.id == pedido.usuario
-    
-    pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
-    if not pedido:
-        raise HTTPException(status_code=404, detail="Pedido não encontrado.")
-    
-    if not usuario.admin and usuario.id != pedido.usuario:
-        raise HTTPException(status_code=401, detail="Você não tem permissão para cancelar este pedido.")
-
-    pedido.status = "CANCELADO"
-    session.commit()
-    return {
-        "mensagem": f"Pedido {pedido.id} cancelado com sucesso.",
-        "pedido": pedido
-        }
-
+# listar todos os pedidos (apenas admin)
 @order_router.get("/listar")
 async def listar_pedidos(session: Session= Depends(pegar_sessao), usuario: Usuario= Depends(verificar_token)):
     # Restringir essa rota apenas para administradores
@@ -58,6 +30,40 @@ async def listar_pedidos(session: Session= Depends(pegar_sessao), usuario: Usuar
             "pedidos": pedidos
             }
 
+# vizualizar todos os pedidos do usuário autenticado
+@order_router.get("/listar/usuario")
+async def listar_pedidos(session: Session= Depends(pegar_sessao), usuario: Usuario= Depends(verificar_token)):
+    pedidos = session.query(Pedido).filter(Pedido.usuario==usuario.id).all()
+    return {
+        "pedidos": pedidos
+        }
+
+# vizualizar 1 pedido específico
+@order_router.get("/pedido/{id_pedido}")
+async def vizualizar_pedido(id_pedido: int, session: Session= Depends(pegar_sessao), usuario: Usuario= Depends(verificar_token)):
+    pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
+    if not pedido:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado.")
+    
+    if not usuario.admin and usuario.id != pedido.usuario:
+        raise HTTPException(status_code=401, detail="Você não tem permissão para vizualizar este pedido.")
+    
+    return {
+        "quantidade_itens": len(pedido.itens),
+        "pedido": pedido
+        }
+
+# criar novo pedido
+@order_router.post("/pedido")
+async def criar_pedido(pedido_s: PedidoSchema, session: Session= Depends(pegar_sessao)):
+    
+    novo_pedido = Pedido(pedido_s.usuario)
+    session.add(novo_pedido)
+    session.commit()
+    
+    return {"mensagem": f"pedido criado com sucesso. Id do pedido {novo_pedido.id}."}
+
+# adicionar item ao pedido
 @order_router.post("/pedido/adiciona-item/{id_pedido}")
 async def adicionar_item_pedido(id_pedido: int, 
                                 item_pedido_s: ItemPedidoSchema, 
@@ -88,6 +94,7 @@ async def adicionar_item_pedido(id_pedido: int,
         "preco_atualizado": pedido.preco
         }
 
+# remover item do pedido
 @order_router.delete("/pedido/remover-item/{id_item_pedido}")
 async def remover_item_pedido(id_item_pedido: int,  
                                 session: Session= Depends(pegar_sessao), 
@@ -108,5 +115,47 @@ async def remover_item_pedido(id_item_pedido: int,
     return {
         "mensagem": "Item removido com sucesso.",
         "quantidade_itens": len(pedido.itens),
+        "pedido": pedido
+        }
+
+# finalizar pedido
+@order_router.put("/pedido/finalizar/{id_pedido}")
+async def finalizar_pedido(id_pedido: int, session: Session= Depends(pegar_sessao), usuario: Usuario= Depends(verificar_token)):
+    # Verificar se o pedido existe e se pertence ao usuário autenticado
+    # Usuário que podem cancelar pedidos: admin ou o próprio dono do pedido
+    # usuario.admin = True ou usuario.id == pedido.usuario
+    
+    pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
+    if not pedido:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado.")
+    
+    if not usuario.admin and usuario.id != pedido.usuario:
+        raise HTTPException(status_code=401, detail="Você não tem permissão para finalizar este pedido.")
+
+    pedido.status = "FINALIZADO"
+    session.commit()
+    return {
+        "mensagem": f"Pedido {pedido.id} finalizado com sucesso.",
+        "pedido": pedido
+        }
+
+# cancelar pedido
+@order_router.put("/pedido/cancelar/{id_pedido}")
+async def cancelar_pedido(id_pedido: int, session: Session= Depends(pegar_sessao), usuario: Usuario= Depends(verificar_token)):
+    # Verificar se o pedido existe e se pertence ao usuário autenticado
+    # Usuário que podem cancelar pedidos: admin ou o próprio dono do pedido
+    # usuario.admin = True ou usuario.id == pedido.usuario
+    
+    pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
+    if not pedido:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado.")
+    
+    if not usuario.admin and usuario.id != pedido.usuario:
+        raise HTTPException(status_code=401, detail="Você não tem permissão para cancelar este pedido.")
+
+    pedido.status = "CANCELADO"
+    session.commit()
+    return {
+        "mensagem": f"Pedido {pedido.id} cancelado com sucesso.",
         "pedido": pedido
         }
